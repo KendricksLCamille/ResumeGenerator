@@ -791,6 +791,45 @@ function loadJson(event) {
 }
 
 /**
+ * Loads the default resume data (KendricksLCamille.json).
+ */
+function loadDefaultJson() {
+    const savedData = localStorage.getItem('resumeData');
+    if (savedData) {
+        if (!confirm("This will overwrite your current data. Have you saved your JSON? Click OK to proceed.")) {
+            return;
+        }
+    }
+
+    fetch('KendricksLCamille.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch default resume data');
+            }
+            return response.json();
+        })
+        .then(loadedResume => {
+            safeLoadResume(resume, loadedResume);
+            saveResumeToLocalStorage();
+            location.reload();
+        })
+        .catch(err => {
+            alert('Error loading default JSON: ' + err.message);
+            console.error(err);
+        });
+}
+
+/**
+ * Clears the resume data from localStorage.
+ */
+function resetData() {
+    if (confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+        localStorage.removeItem('resumeData');
+        location.reload();
+    }
+}
+
+/**
  * Downloads the generated PDF.
  */
 function downloadPdf() {
