@@ -68,14 +68,6 @@ let updateTimeout = null;
  * @returns {string} The camelCase property name (e.g., 'startDate').
  */
 function mapKeyToProperty(key) {
-    // Known manual overrides for specific keys that don't follow a simple pattern
-    const overrides = {
-        'contact-form-name-input': 'name',
-        'contact-form-url-input': 'url',
-    };
-
-    if (overrides[key]) return overrides[key];
-
     // Remove common form prefixes and convert remaining parts to camelCase
     let parts = key.split('-');
     if (parts.length > 1 && (parts[0] === 'experience' || parts[0] === 'education' || parts[0] === 'contact')) {
@@ -817,8 +809,8 @@ function downloadPdf() {
 }
 
 function onContactFormEmailChange() {
-    const urlInputId = "contact-form-url-input";
-    const nameInputId = "contact-form-name-input";
+    const urlInputId = "contact-url";
+    const nameInputId = "contact-name";
     try {
         /**@type HTMLInputElement*/
         let urlInput = document.getElementById(urlInputId)

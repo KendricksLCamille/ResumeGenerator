@@ -61,15 +61,15 @@
         </div>
 
         <form id="contact-form">
-            <div class="input-group mb-3" id="contact-form-name">
-                <label class="input-group-text" for="contact-form-name-input">Name</label>
-                <input class="form-control" id="contact-form-name-input" placeholder="Enter Name Here" required
+            <div class="input-group mb-3" id="contact-name-input-group">
+                <label class="input-group-text" for="contact-name">Name</label>
+                <input class="form-control" id="contact-name" placeholder="Enter Name Here" required
                        type="text">
             </div>
 
-            <div class="input-group mb-3" id="contact-form-url">
-                <label class="input-group-text" for="contact-form-url-input">URL</label>
-                <input aria-placeholder="Enter URL" class="form-control" id="contact-form-url-input" pattern="https?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:\/[^\s]*)?"
+            <div class="input-group mb-3" id="contact-url-input-group">
+                <label class="input-group-text" for="contact-url">URL</label>
+                <input aria-placeholder="Enter URL" class="form-control" id="contact-url" pattern="https?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:\/[^\s]*)?"
                        placeholder="Enter URL (https://example.com)" required type="text" title="You must have at least https:// or http:// and a host" onchange="onContactFormEmailChange()">
             </div>
         </form>
@@ -163,7 +163,7 @@
                     <br/>
                     <span class="form-text form-span text-muted mt-0" style="font-size: 0.85rem;">Key + How it is used + Result of using or reason for using it</span>
                 </label>
-                <textarea class="form-control" id="experience-details" placeholder="Example: Used React to build a dynamic dashboard which reduced data latency by 30% for end-users."
+                <textarea class="form-control" id="experience-details" placeholder="Example: Used React to build a dynamic dashboard which allowed users to have a real-time view of data"
                           rows="5"></textarea>
             </div>
         </form>
