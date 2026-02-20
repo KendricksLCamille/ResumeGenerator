@@ -69,8 +69,8 @@
 
             <div class="input-group mb-3" id="contact-form-url">
                 <label class="input-group-text" for="contact-form-url-input">URL</label>
-                <input aria-placeholder="Enter URL" class="form-control" id="contact-form-url-input" pattern=".+\.\w+"
-                       placeholder="Enter URL" required type="text">
+                <input aria-placeholder="Enter URL" class="form-control" id="contact-form-url-input" pattern="https?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:\/[^\s]*)?"
+                       placeholder="Enter URL (https://example.com)" required type="text" title="You must have at least https:// or http:// and a host" onchange="onContactFormEmailChange()">
             </div>
         </form>
 

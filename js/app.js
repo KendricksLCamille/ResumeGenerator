@@ -81,9 +81,9 @@ function mapKeyToProperty(key) {
     if (parts.length > 1 && (parts[0] === 'experience' || parts[0] === 'education' || parts[0] === 'contact')) {
         parts.shift();
     }
-    
+
     // Convert hyphenated-string to camelCase
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
         index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
     ).join('');
 }
@@ -96,12 +96,12 @@ function mapKeyToProperty(key) {
  */
 function mapPropertyToKey(prefix, property) {
     let hyphenated = property.replaceAll(/([A-Z])/g, "-$1").toLowerCase();
-    
+
     // Reverse the shift of 'degree' for 'degreeType' if it happens
     if (prefix === 'education' && property === 'degreeType') {
         return 'education-degree-type';
     }
-    
+
     return `${prefix}-${hyphenated}`;
 }
 
@@ -110,7 +110,7 @@ function mapPropertyToKey(prefix, property) {
  * @param {Resume} resume - The current resume state to update.
  * @param {Object} loadedResume - The raw JSON data.
  */
-function safeLoadResume(resume, loadedResume){
+function safeLoadResume(resume, loadedResume) {
     resume.name = loadedResume.name || '';
     resume.email = loadedResume.email || '';
     resume.phone = loadedResume.phone || '';
@@ -142,14 +142,14 @@ function safeLoadResume(resume, loadedResume){
  */
 function updatePreview(immediate = false) {
     const previewElement = document.getElementById('pdf-preview');
-    
+
     if (immediate) {
         generatePdf();
         return;
     }
 
     // Start fade out
-    previewElement.classList ='fade-out';
+    previewElement.classList = 'fade-out';
 
     if (updateTimeout) {
         clearTimeout(updateTimeout);
@@ -166,7 +166,7 @@ function updatePreview(immediate = false) {
  * Generates the PDF using jsPDF.
  */
 function generatePdf() {
-    const { jsPDF } = globalThis.jspdf;
+    const {jsPDF} = globalThis.jspdf;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -191,7 +191,7 @@ function generatePdf() {
         const [year, month] = dateStr.split('-').map(Number);
         if (!year || !month) return dateStr;
         const date = new Date(year, month - 1);
-        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        return date.toLocaleDateString('en-US', {month: 'short', year: 'numeric'});
     };
 
     // Font setup
@@ -200,34 +200,34 @@ function generatePdf() {
     // 1. Name: Bold, Center, 14pt
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(resume.name || '', pageWidth / 2, y, { align: 'center' });
+    doc.text(resume.name || '', pageWidth / 2, y, {align: 'center'});
     y += getLineHeightMM(14, 1.15);
 
     // 2. Contact info: 12pt, plain, 1.15 spacing
     // 'Phone Number | Email | Contact-info1 | Contact-info2 ...'
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    
+
     let contactParts = [];
     if (resume.phone) {
-        contactParts.push({ text: resume.phone, link: `tel:${resume.phone.replaceAll(/\s+/g, '')}` });
+        contactParts.push({text: resume.phone, link: `tel:${resume.phone.replaceAll(/\s+/g, '')}`});
     }
     if (resume.email) {
-        contactParts.push({ text: resume.email, link: `mailto:${resume.email}` });
+        contactParts.push({text: resume.email, link: `mailto:${resume.email}`});
     }
-    
+
     resume.contacts.forEach(contact => {
         const name = contact.name;
         const url = contact.url;
         if (name) {
-            contactParts.push({ text: name, link: url });
+            contactParts.push({text: name, link: url});
         }
     });
 
     if (contactParts.length > 0) {
         const separator = " | ";
         let currentX = margin;
-        
+
         // To center the whole contact line, we first calculate its total width
         let totalWidth = 0;
         contactParts.forEach((part, index) => {
@@ -236,7 +236,7 @@ function generatePdf() {
                 totalWidth += doc.getTextWidth(separator);
             }
         });
-        
+
         currentX = (pageWidth - totalWidth) / 2;
 
         contactParts.forEach((part, index) => {
@@ -245,10 +245,10 @@ function generatePdf() {
             doc.text(part.text, currentX, y);
             if (part.link) {
                 // Adjusting the link rectangle to be more accurate
-                doc.link(currentX, y - 4, partWidth, 5, { url: part.link });
+                doc.link(currentX, y - 4, partWidth, 5, {url: part.link});
             }
             currentX += partWidth;
-            
+
             if (index < contactParts.length - 1) {
                 doc.setTextColor(0, 0, 0); // Black for separator
                 doc.text(separator, currentX, y);
@@ -264,7 +264,7 @@ function generatePdf() {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(12);
         const lines = doc.splitTextToSize(additionalText, contentWidth);
-        doc.text(lines, pageWidth / 2, y, { align: 'center' });
+        doc.text(lines, pageWidth / 2, y, {align: 'center'});
         y += lines.length * getLineHeightMM(12, 1.15);
     }
 
@@ -307,7 +307,7 @@ function generatePdf() {
             }
 
             const leftText = `• ${edu.degreeType} in ${edu.category} | ${edu.name}${locationText}`;
-            
+
             let rightText = "";
             const eduDateStr = edu.date; // YYYY-MM
             if (eduDateStr) {
@@ -322,11 +322,14 @@ function generatePdf() {
 
             doc.text(leftText, margin + 5, y);
             if (rightText) {
-                doc.text(rightText, pageWidth - margin, y, { align: 'right' });
+                doc.text(rightText, pageWidth - margin, y, {align: 'right'});
             }
         }
         y += sectionLineHeight;
-        if (y > 280) { doc.addPage(); y = 20; }
+        if (y > 280) {
+            doc.addPage();
+            y = 20;
+        }
     });
 
     // New Line
@@ -360,7 +363,7 @@ function generatePdf() {
     sortedExperience.forEach(exp => {
         // [italics]([left aligned](Title at Company, Company, State) and [right-aligned](Start-End/Current/Present)
         doc.setFont("helvetica", "italic"); // italics
-        
+
         const title = exp.title || '';
         const company = exp.company || '';
         const location = exp.location || ''; // State/Location
@@ -374,9 +377,9 @@ function generatePdf() {
             doc.text(title, currentX, y);
             const titleWidth = doc.getTextWidth(title);
             if (url) {
-                doc.link(currentX, y - 4, titleWidth, 5, { url: url });
+                doc.link(currentX, y - 4, titleWidth, 5, {url: url});
                 // Draw underline in the same color as the text
-                doc.setDrawColor(0, 0, 255); 
+                doc.setDrawColor(0, 0, 255);
                 doc.line(currentX, y + 0.5, currentX + titleWidth, y + 0.5);
                 doc.setTextColor(0, 0, 0); // Reset to black
                 doc.setDrawColor(0, 0, 0); // Reset to black
@@ -387,7 +390,7 @@ function generatePdf() {
         let remainingParts = [];
         if (company) remainingParts.push(company);
         if (location) remainingParts.push(location);
-        
+
         if (remainingParts.length > 0) {
             let remainingText = (title ? ", " : "") + remainingParts.join(", ");
             doc.text(remainingText, currentX, y);
@@ -399,7 +402,7 @@ function generatePdf() {
         const formattedEnd = formatDate(end);
         const rightText = formattedStart ? `${formattedStart} - ${formattedEnd}` : formattedEnd;
 
-        doc.text(rightText, pageWidth - margin, y, { align: 'right' });
+        doc.text(rightText, pageWidth - margin, y, {align: 'right'});
         y += sectionLineHeight;
 
         if (url) {
@@ -407,7 +410,7 @@ function generatePdf() {
         }
 
         doc.setFont("helvetica", "normal");
-        
+
         const MAX_NUMBER_OF_BULLETS_TO_DISPLAY = 8;
         let bullets = [];
 
@@ -425,12 +428,20 @@ function generatePdf() {
         bullets.slice(0, MAX_NUMBER_OF_BULLETS_TO_DISPLAY).forEach(bullet => {
             const splitBullet = doc.splitTextToSize(`• ${bullet}`, contentWidth - 5);
             doc.text(splitBullet, margin + 5, y);
-            y += splitBullet.length * sectionLineHeight*1.2;
-            if (y > 280) { doc.addPage(); y = 20; doc.setFontSize(sectionFontSize); }
+            y += splitBullet.length * sectionLineHeight * 1.2;
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+                doc.setFontSize(sectionFontSize);
+            }
         });
 
         y += sectionLineHeight / 1.5; // small gap between entries
-        if (y > 280) { doc.addPage(); y = 20; doc.setFontSize(sectionFontSize); }
+        if (y > 280) {
+            doc.addPage();
+            y = 20;
+            doc.setFontSize(sectionFontSize);
+        }
     });
 
     // Output as blob url for preview and download reuse
@@ -667,7 +678,6 @@ function makeFormBread(title, formId, dataArray, sortFunc = null, getNameFunc = 
     }
 
 
-
     function deleteItem() {
         if (currentItem === null) {
             alert("Nothing to delete");
@@ -695,7 +705,7 @@ function makeFormBread(title, formId, dataArray, sortFunc = null, getNameFunc = 
 
                 // Only save elements that belong to this form
                 if (!key.startsWith(prefix)) return;
-                
+
                 const property = mapKeyToProperty(key);
                 data[property] = element.value;
             }
@@ -742,7 +752,7 @@ function downloadJson() {
         tags: Array.from(resume.tags)
     };
     const dataStr = JSON.stringify(resumeToSave);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
     const exportFileDefaultName = 'resume.json';
 
@@ -761,10 +771,10 @@ function loadJson(event) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         try {
             const loadedResume = JSON.parse(e.target.result);
-            
+
             // Basic version check (optional warning)
             if (loadedResume.version !== APP_VERSION) {
                 console.warn(`Version mismatch: JSON is ${loadedResume.version}, App is ${APP_VERSION}`);
@@ -772,10 +782,10 @@ function loadJson(event) {
 
             // Update resume object
             safeLoadResume(resume, loadedResume)
-            
+
             // Save to local storage
             saveResumeToLocalStorage();
-            
+
             // Reload the page to refresh all makeFormBread instances easily,
             // OR we'd need a way to notify them. Reloading is safer for state consistency.
             location.reload();
@@ -795,7 +805,7 @@ function downloadPdf() {
     if (!currentPdfBlob) {
         updatePreview(true);
     }
-    
+
     const url = globalThis.URL.createObjectURL(currentPdfBlob);
     const link = document.createElement('a');
     link.href = url;
@@ -806,4 +816,28 @@ function downloadPdf() {
     // Optionally revoke the URL after download, but we keep it for preview if we just reuse the currentPdfBlob
 }
 
+function onContactFormEmailChange() {
+    const urlInputId = "contact-form-url-input";
+    const nameInputId = "contact-form-name-input";
+    try {
+        /**@type HTMLInputElement*/
+        let urlInput = document.getElementById(urlInputId)
+
+        /**@type HTMLInputElement*/
+        let nameInput = document.getElementById(nameInputId);
+
+        let url = urlInput.value;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        const host = new URL(url).hostname;
+        const parts = host.replace(/^www\./, '').split('.');
+        if (parts.length > 0) {
+            const hostName = parts[0];
+            nameInput.value = hostName.charAt(0).toUpperCase() + hostName.slice(1);
+        }
+    } catch (e) {
+        console.error("Invalid URL for name extraction", e);
+    }
+}
 
