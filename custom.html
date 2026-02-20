@@ -1,0 +1,418 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title></title>
+    <link href="css/style.css" rel="stylesheet">
+    <meta content="" name="description">
+
+    <meta content="" property="og:title">
+    <meta content="" property="og:type">
+    <meta content="" property="og:url">
+    <meta content="" property="og:image">
+    <meta content="" property="og:image:alt">
+
+    <link href="/favicon.ico" rel="icon" sizes="any">
+    <link href="/icon.svg" rel="icon" type="image/svg+xml">
+    <link href="icon.png" rel="apple-touch-icon">
+
+    <link href="site.webmanifest" rel="manifest">
+    <meta content="#fafafa" name="theme-color">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+<header class="fixed-top mb-2">
+    <div class="d-flex gap-1">
+        <a class="btn btn-primary" href="/index.html">Normal</a>
+        <a class="btn btn-secondary btn-active" href="/custom.html">Custom</a>
+    </div>
+</header>
+
+<div class="row g-0 mt-5" id="app">
+
+    <div class="col-md-6 col-sm-12 overflow-auto h-100 p-3" id="inputs">
+        <h2 class="mb-4">Add a Tag</h2>
+        <!-- Container for tags -->
+        <div id="tagsContainer" class="mb-3"></div>
+        <form id="tagForm" novalidate>
+            <!-- Input for new tag -->
+            <div class="mb-3">
+                <label for="tagString" class="form-label">Tag String</label>
+                <input type="text" class="form-control" id="tagString" placeholder="Enter tag" required />
+                <div class="invalid-feedback">Please enter a tag.</div>
+            </div>
+            <!-- Checkbox for regex -->
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="isRegex" />
+                <label class="form-check-label" for="isRegex">Is Regex?</label>
+            </div>
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary">Add Tag</button>
+            <div class="mt-3" id="validationMsg"></div>
+        </form>
+
+        <div class="mb-3">
+            <label for="jobDescription" class="form-label">Job Description</label>
+            <textarea class="form-control" id="jobDescription" rows="10" placeholder="Paste the job description here..."></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="massTagInput" class="form-label">Mass Add Tags (JSON)</label>
+            <textarea class="form-control" id="massTagInput" rows="10" placeholder='[{"string": "tag1", "isRegex": false}, {"string": "tag2", "isRegex": true}]'></textarea>
+            <button class="btn btn-secondary mt-2" onclick="massAddTags()">Mass Add Tags</button>
+            <div id="massTagStatus" class="mt-2 text-danger"></div>
+        </div>
+    </div>
+    <div class="col-md-6 h-100 p-0 bg-dark" id="preview">
+        <iframe id="pdf-preview" style="width: 100%; height: 100%; border: none;"
+                title="PDF Preview of Resume"></iframe>
+    </div>
+
+</div>
+
+<footer class="fixed-bottom bg-light border-top d-flex justify-content-center gap-3">
+    <button class="btn btn-primary" onclick="downloadPdf()">Download PDF</button>
+    <button class="btn btn-secondary" onclick="downloadJson()">Save JSON</button>
+    <label class="btn btn-info mb-0">
+        Load JSON <input accept=".json" hidden onchange="loadJson(event)" type="file">
+    </label>
+    <span class="align-self-center ms-auto me-3 text-muted">v1.0.0</span>
+</footer>
+
+<script src="js/app.js"></script>
+<link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" rel="stylesheet">
+<script crossorigin="anonymous"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
+<script>
+    // Load from local storage on startup
+    const savedData = localStorage.getItem('resumeData');
+    if (savedData) {
+        try {
+            const loadedResume = JSON.parse(savedData);
+            safeLoadResume(resume, loadedResume);
+        } catch (e) {
+            console.error("Failed to load resume from localStorage", e);
+        }
+    }
+
+    const tagsContainer = document.getElementById('tagsContainer');
+    const form = document.getElementById('tagForm');
+    const tagInput = document.getElementById('tagString');
+    const isRegexCheckbox = document.getElementById('isRegex');
+    const validationMsg = document.getElementById('validationMsg');
+
+    const jobDescriptionArea = document.getElementById('jobDescription');
+    const massTagInput = document.getElementById('massTagInput');
+    const massTagStatus = document.getElementById('massTagStatus');
+
+    /** @type {Map<String, RegExp>}*/
+    const regexStore = new Map();
+
+    /**
+     * Validates a regex string.
+     * @param {string} pattern
+     * @returns {{isValid: boolean, error?: string}}
+     */
+    function validateRegex(pattern) {
+        try {
+            new RegExp(pattern);
+            return { isValid: true };
+        } catch (e) {
+            return { isValid: false, error: e.message };
+        }
+    }
+
+    function updateModifiedResume() {
+        /** @type String */
+        const textBlock = jobDescriptionArea.value;
+
+        /** @type {Array<Tag>}*/
+        const matchingTags = [];
+
+
+        /** @type {Map<Tag, number>}*/
+        const tagCounts = new Map();
+
+        // 1. Get union of values in tags that have a match inside the text block
+        console.group("Resume Customization Matching Details");
+        console.log("Checking tags in job description...");
+        resume.tags.forEach(tag => {
+            let matches = 0;
+            if (tag.isRegex) {
+                debugger
+                if(!regexStore.has(tag.string)) {
+                    regexStore.set(tag.string, new RegExp(tag.string, 'gm'));
+                }
+                const re = regexStore.get(tag.string);
+                try {
+                    const found = textBlock.match(re);
+                    if (found) {
+                        matches = found.length;
+                    }
+                } catch (e) {
+                    console.error(`Invalid regex: ${tag.string} | ${e.message}`);
+                }
+            } else {
+                const found = textBlock.split(tag.string);
+                if (found) {
+                    matches = found.length - 1;
+                }
+            }
+
+            if (matches > 0) {
+                console.log(`Matched tag: "${tag.string}" (regex: ${tag.isRegex}) - ${matches} matches found`);
+                matchingTags.push(tag);
+                tagCounts.set(tag, matches);
+            }
+        });
+
+        if (matchingTags.length === 0) {
+            console.log("No tags matched the job description.");
+        }
+
+
+        // Deep copy for modification
+        const modifiedResume = structuredClone({
+            ...resume,
+            contacts: Array.from(resume.contacts),
+            education: Array.from(resume.education),
+            experience: Array.from(resume.experience),
+            tags: Array.from(resume.tags)
+        });
+
+        // 2. Filter experiences by whether it has any matches
+        console.log("Filtering experiences based on matching tags...");
+        const filteredExperiences = modifiedResume.experience.filter(exp => {
+            const combinedText = JSON.stringify(exp);
+            const hasMatch = matchingTags.some(tag => {
+                if(tag.isRegex) {
+                    const re = regexStore.get(tag.string);
+                    return re.test(combinedText)
+                }
+                else{
+                    return combinedText.includes(tag.string);
+                }
+            });
+            if (hasMatch) {
+                console.log(`Keeping experience: ${exp.company || exp.title}`);
+            } else {
+                console.log(`Filtering out experience: ${exp.company || exp.title}`);
+            }
+            return hasMatch;
+        });
+
+        debugger;
+
+        // Map experiences
+
+        // 3. Order the details of the experiences by the union in order of how often a match shows up
+        console.log("Ordering experience details by relevance score...");
+        filteredExperiences.forEach(exp => {
+            if (exp.details) {
+                console.groupCollapsed(`Scoring details for: ${exp.company || exp.title}`);
+                const lines = exp.details.split('\n');
+                const linesAndScores = lines.map(line => {
+                    const matchedTagDetails = [];
+                    const score = matchingTags.reduce((acc, tag) => {
+                        let tagMatchCount = 0;
+                        if (tag.isRegex) {
+                            const re = regexStore.get(tag.string);
+                            if(re.test(line)) {
+                                tagMatchCount = tagCounts.get(tag) || 0;
+                            }
+                        }
+                        else if (line.includes(tag.string)) {
+                            tagMatchCount = tagCounts.get(tag) || 0;
+                        }
+
+                        if (tagMatchCount > 0) {
+                            matchedTagDetails.push(`${tag.string} (+${tagMatchCount})`);
+                            return acc + tagMatchCount;
+                        }
+                        return acc
+                    }, 0);
+
+                    if (score > 0) {
+                        console.log(`Line: "${line.substring(0, 50)}${line.length > 50 ? '...' : ''}" - Score: ${score} (from tags: ${matchedTagDetails.join(', ')})`);
+                    }
+                    return [line, score];
+                })
+                let result = linesAndScores.sort((a, b) => {
+                    return b[1] - a[1];
+                }).map(lineAndScore => lineAndScore[0]);
+                exp.details = result.join('\n');
+                console.groupEnd();
+            }
+        });
+
+        console.groupEnd();
+
+        // Output modified JSON - removed as per requirements
+        // massTagInput.value = JSON.stringify(modifiedResume, null, 4);
+
+        // Update global resume temporarily
+        const actualOriginalResume = resume;
+
+        modifiedResume.experience = new Set(filteredExperiences);
+        modifiedResume.contacts = new Set(modifiedResume.contacts);
+        modifiedResume.education = new Set(modifiedResume.education);
+        modifiedResume.tags = new Set(modifiedResume.tags);
+        // noinspection JSValidateTypes
+        resume = modifiedResume; // This is fixed at the last second by the set calls above.
+
+        // Update PDF
+        updatePreview(true);
+
+        // Restore original
+        resume = actualOriginalResume;
+    }
+
+    // Function to render tags as badges
+    function renderTags() {
+        tagsContainer.innerHTML = '';
+        resume.tags.forEach((tag) => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-secondary me-2 mb-2';
+            badge.textContent = tag.string + (tag.isRegex ? ' (regex)' : '');
+            badge.style.cursor = 'pointer';
+            badge.title = 'Click to remove';
+
+            // Remove the tag on click
+            badge.addEventListener('click', () => {
+                resume.tags.delete(tag);
+                saveResumeToLocalStorage();
+                renderTags();
+            });
+
+            tagsContainer.appendChild(badge);
+        });
+        updateModifiedResume();
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        validationMsg.innerHTML = '';
+
+        const stringValue = tagInput.value.trim();
+        if (!stringValue) return;
+        const isRegex = isRegexCheckbox.checked;
+
+        if (isRegex) {
+            const validation = validateRegex(stringValue);
+            if (!validation.isValid) {
+                validationMsg.innerHTML = `<span class="text-danger">Invalid Regex: ${validation.error}</span>`;
+                return;
+            }
+        }
+
+        // Check for duplicates
+        let exists = false;
+        for (let existingTag of resume.tags) {
+            if (existingTag.string === stringValue && !!existingTag.isRegex === !!isRegex) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (exists) {
+            validationMsg.innerHTML = `<span class="text-danger">Tag already exists</span>`;
+            return;
+        }
+
+        // Add the new tag
+        resume.tags.add({ string: stringValue, isRegex: isRegex });
+        saveResumeToLocalStorage()
+        renderTags();
+        // Reset input
+        form.reset();
+    });
+
+
+
+    jobDescriptionArea.addEventListener('input', updateModifiedResume);
+
+    function massAddTags() {
+        const input = massTagInput.value.trim();
+        massTagStatus.innerHTML = '';
+        if (!input) return;
+
+        let tags;
+        try {
+            tags = JSON.parse(input);
+        } catch (e) {
+            massTagStatus.innerHTML = `Invalid JSON: ${e.message}`;
+            return;
+        }
+
+        if (!Array.isArray(tags)) {
+            massTagStatus.innerHTML = 'Input must be an array of tags.';
+            return;
+        }
+
+        const errors = [];
+        let addedCount = 0;
+
+        tags.forEach((tag, index) => {
+            if (typeof tag !== 'object' || tag === null) {
+                errors.push(`Item at index ${index}: Not an object`);
+                return;
+            }
+            if (typeof tag.string !== 'string' || tag.string.trim() === '') {
+                errors.push(`Item at index ${index}: "string" property is missing or empty`);
+                return;
+            }
+
+            const isRegex = !!tag.isRegex;
+
+            if (isRegex) {
+                const validation = validateRegex(tag.string);
+                if (!validation.isValid) {
+                    errors.push(`"${tag.string}": Invalid Regex - ${validation.error}`);
+                    return;
+                }
+            }
+            
+            // Check for duplicates in resume.tags
+            let exists = false;
+            for (let existingTag of resume.tags) {
+                if (existingTag.string === tag.string && !!existingTag.isRegex === isRegex) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (exists) {
+                errors.push(`"${tag.string}": Tag already exists`);
+            } else {
+                resume.tags.add({
+                    string: tag.string,
+                    isRegex: isRegex
+                });
+                addedCount++;
+            }
+        });
+
+        if (errors.length > 0) {
+            massTagStatus.innerHTML = `The below can't be processed:<br>${errors.join('<br>')}`;
+        } else {
+            massTagInput.value = '';
+        }
+
+        if (addedCount > 0) {
+            saveResumeToLocalStorage();
+            renderTags();
+        }
+    }
+
+    renderTags();
+</script>

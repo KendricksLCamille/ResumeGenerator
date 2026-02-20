@@ -1,0 +1,288 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title></title>
+    <link href="css/style.css" rel="stylesheet">
+    <meta content="" name="description">
+
+    <meta content="" property="og:title">
+    <meta content="" property="og:type">
+    <meta content="" property="og:url">
+    <meta content="" property="og:image">
+    <meta content="" property="og:image:alt">
+
+    <link href="/favicon.ico" rel="icon" sizes="any">
+    <link href="/icon.svg" rel="icon" type="image/svg+xml">
+    <link href="icon.png" rel="apple-touch-icon">
+
+    <link href="site.webmanifest" rel="manifest">
+    <meta content="#fafafa" name="theme-color">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+<header class="fixed-top mb-2">
+    <div class="d-flex gap-1">
+        <a class="btn btn-primary btn-active" href="/index.html">Home</a>
+        <a class="btn btn-secondary" href="/custom.html">Custom Resume Generation</a>
+    </div>
+</header>
+
+<div class="row g-0 mt-5" id="app">
+
+    <div class="col-md-6 col-sm-12 overflow-auto h-100 p-3" id="inputs">
+
+        <div class="input-group mb-3" id="name" title="name">
+            <label class="input-group-text" for="name-input">Name</label>
+            <input class="form-control" id="name-input" placeholder="Enter Name Here" type="text">
+        </div>
+
+        <div class="input-group mb-3" id="additional-text" title="additional-text">
+            <span class="input-group-text" id="additional-text-input">Additional Text</span>
+            <input aria-describedby="basic-addon1" aria-label="AdditionalTextLabel" class="form-control"
+                   placeholder="Text to add under name" type="text">
+        </div>
+
+        <div class="input-group mb-3" id="email">
+            <label class="input-group-text" for="email-input">Enter Email</label>
+            <input class="form-control" id="email-input" pattern="[a-zA-Z0-9._%\+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" placeholder="Enter Email Here"
+                   title="Please enter a valid email address"
+                   type="email">
+        </div>
+
+        <div class="input-group mb-3" id="phone" title="phone">
+            <span class="input-group-text" id="phone-input">Phone</span>
+            <input aria-label="PhoneNumber" class="form-control" pattern="[\d\s\-\(\)\+\.]{7,15}" placeholder="Phone number"
+                   title="Please enter a valid phone number" type="text">
+        </div>
+
+        <form id="contact-form">
+            <div class="input-group mb-3" id="contact-form-name">
+                <label class="input-group-text" for="contact-form-name-input">Name</label>
+                <input class="form-control" id="contact-form-name-input" placeholder="Enter Name Here" required
+                       type="text">
+            </div>
+
+            <div class="input-group mb-3" id="contact-form-url">
+                <label class="input-group-text" for="contact-form-url-input">URL</label>
+                <input aria-placeholder="Enter URL" class="form-control" id="contact-form-url-input" pattern=".+\.\w+"
+                       placeholder="Enter URL" required type="text">
+            </div>
+        </form>
+
+        <form id="education-form">
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="education-degree-type">Degree Type</label>
+                <select class="form-select" id="education-degree-type" onchange="handleEducationTypeChange()" required>
+                    <option value="A.S.">Associate</option>
+                    <option value="B.S.">Bachelors</option>
+                    <option value="M.S.">Master</option>
+                    <option value="PHD">PHD</option>
+                    <option value="Certificate">Certificate</option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3" id="education-category-group">
+                <label class="input-group-text" for="education-category">Category</label>
+                <input class="form-control" id="education-category" placeholder="e.g. Computer Science" required
+                       type="text">
+            </div>
+
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="education-name" id="education-name-label">School Name</label>
+                <input class="form-control" id="education-name" placeholder="Enter School Name" required type="text">
+            </div>
+
+            <div class="input-group mb-3" id="education-location-group">
+                <label class="input-group-text" for="education-city">City</label>
+                <input class="form-control" id="education-city" placeholder="City" required type="text">
+                <label class="input-group-text" for="education-state">State</label>
+                <input class="form-control" id="education-state" pattern="[A-Z]{2}" placeholder="State" required
+                       title="Two-letter state code (e.g., CA)" type="text">
+            </div>
+
+            <div class="input-group mb-3" id="education-date-group">
+                <label class="input-group-text" for="education-date">Graduation Date</label>
+                <input class="form-control" id="education-date" pattern="\d{4}-\d{2}" placeholder="YYYY-MM" required
+                       type="month">
+            </div>
+        </form>
+
+        <form id="experience-form">
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-category">Category</label>
+                <select class="form-select" id="experience-category" required>
+                    <option value="Work Experience">Work Experience</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Project">Project</option>
+                    <option value="Volunteer">Volunteer</option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-title">Title</label>
+                <input class="form-control" id="experience-title" placeholder="e.g. Senior Software Engineer / Resume Generator"
+                       required type="text">
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-url">URL (Optional)</label>
+                <input class="form-control" id="experience-url" pattern="https?://.+" placeholder="https://company.com"
+                       type="url">
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-company">Client (Optional)</label>
+                <input class="form-control" id="experience-company" placeholder="e.g. Google / Freelance Client"
+                       type="text">
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-location">Location</label>
+                <input class="form-control" id="experience-location" placeholder="e.g. Mountain View, CA / Remote"
+                       required type="text">
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="experience-start-date">Start Date</label>
+                <input class="form-control" id="experience-start-date" onchange="handleExperienceDateChange('experience')" pattern="\d{4}-\d{2}"
+                       placeholder="YYYY-MM" required type="month">
+                <label class="input-group-text" for="experience-end-date">End Date</label>
+                <input class="form-control" id="experience-end-date" onchange="handleExperienceDateChange('experience')"
+                       pattern="\d{4}-\d{2}" placeholder="End Date (Optional) e.g. YYYY-MM"
+                       type="month">
+            </div>
+            <div class="mb-3">
+                <label class="form-label d-block" for="experience-summary">Summary</label>
+                <input class="form-control" id="experience-summary" placeholder="Brief summary of your role"
+                       type="text">
+            </div>
+            <div class="mb-3">
+                <label class="form-label d-block" for="experience-details">
+                    Details
+                    <br/>
+                    <span class="form-text form-span text-muted mt-0" style="font-size: 0.85rem;">Key + How it is used + Result of using or reason for using it</span>
+                </label>
+                <textarea class="form-control" id="experience-details" placeholder="Example: Used React to build a dynamic dashboard which reduced data latency by 30% for end-users."
+                          rows="5"></textarea>
+            </div>
+        </form>
+
+    </div>
+    <div class="col-md-6 h-100 p-0 bg-dark" id="preview">
+        <iframe id="pdf-preview" style="width: 100%; height: 100%; border: none;"
+                title="PDF Preview of Resume"></iframe>
+    </div>
+
+</div>
+
+<footer class="fixed-bottom bg-light border-top d-flex justify-content-center gap-3">
+    <button class="btn btn-primary" onclick="downloadPdf()">Download PDF</button>
+    <button class="btn btn-secondary" onclick="downloadJson()">Save JSON</button>
+    <label class="btn btn-info mb-0">
+        Load JSON <input accept=".json" hidden onchange="loadJson(event)" type="file">
+    </label>
+    <span class="align-self-center ms-auto me-3 text-muted">v1.0.0</span>
+</footer>
+
+<script src="js/app.js"></script>
+<link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" rel="stylesheet">
+<script crossorigin="anonymous"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
+<script>
+    // Initialize main inputs listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('name-input');
+        const additionalTextInput = document.querySelector('#additional-text input');
+        const emailInput = document.getElementById('email-input');
+        const phoneInput = document.querySelector('#phone input');
+
+        const updateResumeBase = () => {
+            resume.name = nameInput.value;
+            resume.additionalText = additionalTextInput.value;
+            resume.email = emailInput.value;
+            resume.phone = phoneInput.value;
+            saveResumeToLocalStorage();
+            updatePreview();
+        };
+
+        nameInput.addEventListener('input', updateResumeBase);
+        additionalTextInput.addEventListener('input', updateResumeBase);
+        emailInput.addEventListener('input', updateResumeBase);
+        phoneInput.addEventListener('input', updateResumeBase);
+
+        // Initial value sync (for a case where the browser already fills page loads and inputs)
+        resume.name = nameInput.value;
+        resume.additionalText = additionalTextInput.value;
+        resume.email = emailInput.value;
+        resume.phone = phoneInput.value;
+
+        // Load from local storage on startup
+        const savedData = localStorage.getItem('resumeData');
+        if (savedData) {
+            try {
+                const loadedResume = JSON.parse(savedData);
+                safeLoadResume(resume, loadedResume);
+
+                nameInput.value = resume.name || '';
+                additionalTextInput.value = resume.additionalText || '';
+                emailInput.value = resume.email || '';
+                phoneInput.value = resume.phone || '';
+            } catch (e) {
+                console.error("Failed to load resume from localStorage", e);
+            }
+        }
+
+        // Now initialize makeFormBread after data is loaded
+        initializeBreads();
+
+        updatePreview();
+    });
+
+
+    function initializeBreads() {
+        makeFormBread("Contact Form", "contact-form", resume.contacts, (a, b) => {
+            const left = a.name || "";
+            const right = b.name || "";
+            return left.localeCompare(right);
+        }, (item) => item.name || "Unnamed Contact");
+
+        makeFormBread("Education/Certification", "education-form", resume.education, (a, b) => {
+            const dateA = a.date || "";
+            const dateB = b.date || "";
+            return dateB.localeCompare(dateA); // Reverse chronological
+        }, (item) => {
+            if (item.degreeType === 'Certificate') {
+                return "Cert: " + (item.name || "Unnamed");
+            }
+            return (item.degreeType || "") + " in " + (item.category || "") + " | " + (item.name || "");
+        });
+
+        makeFormBread("Experience / Projects / Internships", "experience-form", resume.experience, (a, b) => {
+            const categoryOrder = {
+                "Work Experience": 1,
+                "Contract": 2,
+                "Internship": 3,
+                "Project": 4,
+                "Projects": 4,
+                "Volunteer": 5
+            };
+            const orderA = categoryOrder[a.category] || 99;
+            const orderB = categoryOrder[b.category] || 99;
+
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+
+            const dateA = a.startDate || "";
+            const dateB = b.startDate || "";
+            return dateB.localeCompare(dateA); // Reverse chronological by start date
+        }, (item) => (item.title || "Unnamed Title") + (item.company ? " @ " + item.company : ""));
+    }
+</script>

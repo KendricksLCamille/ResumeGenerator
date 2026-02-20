@@ -1,0 +1,30 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#app {
+    height: calc(100vh - 55px); /* Adjust based on footer height */
+}
+
+#inputs {
+    padding: 1rem;
+}
+
+.input-group-text{
+    justify-content: center;
+}
+
+
+#pdf-preview {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.fade-out {
+    opacity: 0;
+}
+
+.fade-in{
+    opacity: 1;
+}
